@@ -1,0 +1,65 @@
+Table Name,Column Name,Data Type,Description
+Album,AlbumId,INTEGER,Unique identifier for each album.
+Album,Title,NVARCHAR(160),Title of the album.
+Album,ArtistId,INTEGER,Reference to the artist who created the album.
+Artist,ArtistId,INTEGER,Unique identifier for each artist.
+Artist,Name,NVARCHAR(120),Name of the artist.
+Customer,CustomerId,INTEGER,Unique identifier for each customer.
+Customer,FirstName,NVARCHAR(40),Customer's first name.
+Customer,LastName,NVARCHAR(20),Customer's last name.
+Customer,Company,NVARCHAR(80),Name of the company the customer works for.
+Customer,Address,NVARCHAR(70),Street address of the customer.
+Customer,City,NVARCHAR(40),City where the customer resides.
+Customer,State,NVARCHAR(40),State where the customer resides.
+Customer,Country,NVARCHAR(40),Country where the customer resides.
+Customer,PostalCode,NVARCHAR(10),Customer's postal code.
+Customer,Phone,NVARCHAR(24),Customer's phone number.
+Customer,Fax,NVARCHAR(24),Customer's fax number.
+Customer,Email,NVARCHAR(60),Customer's email address.
+Customer,SupportRepId,INTEGER,Employee assigned as customer support representative.
+Employee,EmployeeId,INTEGER,Unique identifier for each employee.
+Employee,LastName,NVARCHAR(20),Employee's last name.
+Employee,FirstName,NVARCHAR(20),Employee's first name.
+Employee,Title,NVARCHAR(30),Job title of the employee.
+Employee,ReportsTo,INTEGER,Manager that the employee reports to.
+Employee,BirthDate,DATETIME,Employee's birth date.
+Employee,HireDate,DATETIME,Date the employee was hired.
+Employee,Address,NVARCHAR(70),Street address of the employee.
+Employee,City,NVARCHAR(40),City where the employee resides.
+Employee,State,NVARCHAR(40),State where the employee resides.
+Employee,Country,NVARCHAR(40),Country where the employee resides.
+Employee,PostalCode,NVARCHAR(10),Employee's postal code.
+Employee,Phone,NVARCHAR(24),Employee's phone number.
+Employee,Fax,NVARCHAR(24),Employee's fax number.
+Employee,Email,NVARCHAR(60),Employee's email address.
+Genre,GenreId,INTEGER,Unique identifier for each genre.
+Genre,Name,NVARCHAR(120),Name of the genre.
+Invoice,InvoiceId,INTEGER,Unique identifier for each invoice.
+Invoice,CustomerId,INTEGER,Reference to the customer who made the purchase.
+Invoice,InvoiceDate,DATETIME,Date when the invoice was issued.
+Invoice,BillingAddress,NVARCHAR(70),Billing address for the invoice.
+Invoice,BillingCity,NVARCHAR(40),City for the billing address.
+Invoice,BillingState,NVARCHAR(40),State for the billing address.
+Invoice,BillingCountry,NVARCHAR(40),Country for the billing address.
+Invoice,BillingPostalCode,NVARCHAR(10),Postal code for the billing address.
+Invoice,Total,"NUMERIC(10,2)",Total amount for the invoice.
+InvoiceLine,InvoiceLineId,INTEGER,Unique identifier for each invoice line.
+InvoiceLine,InvoiceId,INTEGER,Reference to the invoice this line belongs to.
+InvoiceLine,TrackId,INTEGER,Reference to the track being purchased.
+InvoiceLine,UnitPrice,"NUMERIC(10,2)",Price per unit of the track.
+InvoiceLine,Quantity,INTEGER,Quantity of the track purchased.
+MediaType,MediaTypeId,INTEGER,Unique identifier for each media type.
+MediaType,Name,NVARCHAR(120),Name of the media type.
+Playlist,PlaylistId,INTEGER,Unique identifier for each playlist.
+Playlist,Name,NVARCHAR(120),Name of the playlist.
+PlaylistTrack,PlaylistId,INTEGER,Reference to the playlist.
+PlaylistTrack,TrackId,INTEGER,Reference to the track.
+Track,TrackId,INTEGER,Unique identifier for each track.
+Track,Name,NVARCHAR(200),Name of the track.
+Track,AlbumId,INTEGER,Reference to the album containing this track.
+Track,MediaTypeId,INTEGER,Reference to the media type of the track.
+Track,GenreId,INTEGER,Reference to the genre of the track.
+Track,Composer,NVARCHAR(220),Name of the composer.
+Track,Milliseconds,INTEGER,Duration of the track in milliseconds.
+Track,Bytes,INTEGER,File size of the track in bytes.
+Track,UnitPrice,"NUMERIC(10,2)",Price per unit of the track.

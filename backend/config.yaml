@@ -1,0 +1,92 @@
+app:
+  name: SQL Query Assistant
+  version: 1.0.0
+  environment: ${ENVIRONMENT}
+
+llm:
+  model: gpt-4o-mini
+  temperature: 0.0
+  max_tokens: 2000
+  streaming: false
+  retry_attempts: 3
+  timeout: 30
+
+database:
+  type: "sqlite"  # or "mongodb", "mysql", "postgresql"
+  default_path: chinook.db
+  # For MongoDB
+  connection_string: "mongodb://localhost:27017/"
+  database_name: "your_database"
+  # For MySQL/PostgreSQL
+  host: "localhost"
+  port: 3306  # 5432 for PostgreSQL
+  user: "root"
+  password: "password"
+  timeout: 30
+  connection_retries: 3
+  pool_size: 5
+  max_overflow: 10
+  pool_timeout: 30
+  pool_recycle: 3600
+
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: logs/sql_assistant.log
+  max_size: 10485760  # 10MB
+  backup_count: 5
+  console_logging: true
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  debug: false
+  rate_limit: 100
+  timeout: 30
+  cors_origins: ["*"]
+  swagger_ui: true
+
+evaluation:
+  ground_truth_path: "Complete_Ground_Truth_SQL_Table.csv"
+  similarity_threshold: 0.8
+  batch_size: 100
+
+templates:
+  sql_query: |
+    Given the following SQL database schema:
+    {db_schema}
+    
+    Write a SQL query to answer the following question:
+    Question: {question}
+    
+    SQL Query:
+
+tool_get_data_dictionary:
+  file_path: "Database_Data_Dictionary_with_Descriptions.csv"
+  filter_column: 'Column Name'
+  return_columns: ['Column Name','Table Name','Data Type','Description']
+  max_results: 5  # Maximum number of results to return
+
+tool_execute_sql:
+  return_format: 'json'  # Available formats: json, csv, list
+  max_results: 1  # Maximum number of results to return
+
+tool_get_schema:
+  exclude_system_tables: true
+  include_relationships: true
+  include_indexes: true
+  cache_timeout: 300  # Schema cache timeout in seconds
+
+assistant:
+  system_message: |
+    You are a SQL assistant that helps users query databases.
+    You can use the following tools:
+    1. get_schema: Get database structure
+    2. execute_sql_query: Run SQL queries
+    3. get_data_dictionary: Get data dictionary.
+    Check the produced sql query for correctness. And fix if not working.
+    Always provide accurate and concise information.
+    Always provide sql queries when you cheked its wotking.
+    I dont want you to provide answers, I want you to provide just pure sql queries.
+  process:
+    default_thread_id: 1
