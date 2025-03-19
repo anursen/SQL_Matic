@@ -23,12 +23,10 @@ app.add_middleware(
 @app.get("/schema")
 async def get_database_schema():
     schema_result = get_schema("get_all")
-    print("Schema result:", schema_result)  # Debug print
     
     # Extract the actual schema data from the tool response
     if isinstance(schema_result, dict) and "schema" in schema_result and "tables" in schema_result["schema"]:
         tables = schema_result["schema"]["tables"]
-        print("Returning tables:", tables)  # Debug print
         return {"tables": tables}
     else:
         print("Schema format unexpected:", schema_result)  # Debug print

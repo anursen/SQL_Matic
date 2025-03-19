@@ -8,8 +8,8 @@ function App() {
   const [currentView, setCurrentView] = useState('chat');
 
   return (
-    <div className="grid grid-cols-12 h-screen bg-gray-100">
-      <div className="col-span-3 border-r border-gray-200">
+    <div className="grid grid-cols-12 h-screen bg-gray-100 overflow-hidden">
+      <div className="col-span-3 border-r border-gray-200 overflow-y-auto">
         <div className="p-4 border-b border-gray-200">
           <nav className="flex flex-col space-y-2">
             <button 
@@ -37,11 +37,11 @@ function App() {
         <ChatHistoryPanel />
       </div>
       
-      <div className="col-span-6">
+      <div className="col-span-6 flex flex-col overflow-hidden">
         {currentView === 'chat' ? <ChatInterface /> : <ConfigEditorPage />}
       </div>
       
-      <div className="col-span-3 border-l border-gray-200">
+      <div className="col-span-3 border-l border-gray-200 overflow-y-auto">
         <BackendUpdatesPanel />
       </div>
     </div>

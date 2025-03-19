@@ -50,6 +50,7 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
+      {/* Header area */}
       <div className="bg-white p-2 border-b flex justify-between items-center">
         <div className="text-sm text-gray-500">
           {currentSession ? `Session: ${currentSession.substring(0, 8)}...` : 'No active session'}
@@ -62,7 +63,8 @@ const ChatInterface: React.FC = () => {
         </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages area with fixed constraints to prevent overflow */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 150px)' }}>
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -85,7 +87,8 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      <form onSubmit={handleSubmit} className="p-4 bg-white border-t shadow-lg">
+      {/* Input area with fixed height */}
+      <form onSubmit={handleSubmit} className="p-4 bg-white border-t shadow-lg" style={{ minHeight: '80px' }}>
         <div className="flex space-x-2">
           <input
             type="text"

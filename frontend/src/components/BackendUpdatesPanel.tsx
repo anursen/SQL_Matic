@@ -51,7 +51,7 @@ const BackendUpdatesPanel: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-gray-50 p-6 overflow-y-auto">
+    <div className="h-full bg-gray-50 p-6 overflow-y-auto" style={{ maxHeight: '100vh' }}>
       <h2 className="text-xl font-semibold text-gray-800 mb-6">System Metrics(V2)</h2>
       <div className="space-y-4 mb-6">
         <MetricCard 
