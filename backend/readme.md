@@ -104,10 +104,3 @@ async def chat_endpoint(websocket: WebSocket):
 ```
 
 ---
-
-### 🛠️ Next Steps
-
--
-
-This backend ensures **real-time AI interactions** with efficient WebSocket communication. Let me know if you want any refinements! 🚀
-
