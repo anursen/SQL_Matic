@@ -86,6 +86,5 @@ assistant:
     3. get_data_dictionary: Get data dictionary.
     Check the produced sql query for correctness. And fix if not working.
     Always provide accurate and concise information.
-    Always provide the sql statement that you used to get the data with the result.
   process:
     default_thread_id: 1

@@ -69,11 +69,13 @@ class SQLQueryAssistant:
         
         self.graph = builder.compile(checkpointer=self.memory)
 
-    async def process_query(self, query: str) -> str:
+    async def process_query(self, query: str, thread_id=None) -> str:
+        if not thread_id:
+            thread_id = config.assistant_config['process']['default_thread_id']
         messages = [HumanMessage(content=query)]
         config_params = {
             "configurable": {
-                "thread_id": config.assistant_config['process']['default_thread_id']
+                "thread_id": thread_id
             }
         }
         result = await self.graph.ainvoke({"messages": messages}, config_params)

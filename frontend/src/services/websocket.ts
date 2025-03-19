@@ -1,18 +1,28 @@
 import { useChatStore } from '../store';
+import { getSessionId, createNewSession } from '../utils/sessionManager';
 
 class WebSocketService {
   private socket: WebSocket | null = null;
   private readonly SOCKET_URL = 'ws://localhost:8000/ws/chat';
+  private sessionId: string | null = null;
 
   connect() {
     if (this.socket) {
       return;
     }
 
-    this.socket = new WebSocket(this.SOCKET_URL);
+    // Get existing session ID or create a new one
+    this.sessionId = getSessionId();
+    if (!this.sessionId) {
+      this.sessionId = createNewSession();
+    }
+    
+    // Add session ID to WebSocket URL
+    const wsUrl = `${this.SOCKET_URL}?session_id=${this.sessionId}`;
+    this.socket = new WebSocket(wsUrl);
 
     this.socket.onopen = () => {
-      console.log('Connected to WebSocket server');
+      console.log(`Connected to WebSocket server with session: ${this.sessionId}`);
     };
 
     this.socket.onmessage = (event) => {
@@ -48,7 +58,28 @@ class WebSocketService {
       console.error('WebSocket is not connected');
       return;
     }
-    this.socket.send(JSON.stringify({ message }));
+    // Include session ID with each message
+    this.socket.send(JSON.stringify({ 
+      message,
+      sessionId: this.sessionId 
+    }));
+  }
+
+  // Create a method to start a new session
+  startNewSession() {
+    this.sessionId = createNewSession();
+    // Reconnect with new session
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+    this.connect();
+    return this.sessionId;
+  }
+
+  // Get current session ID
+  getCurrentSession() {
+    return this.sessionId;
   }
 
   disconnect() {

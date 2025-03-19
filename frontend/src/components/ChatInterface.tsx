@@ -1,12 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '../store';
 import { wsService } from '../services/websocket';
+import { getSessionHistory, renameSession } from '../utils/sessionManager';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const messages = useChatStore((state) => state.messages);
   const addMessage = useChatStore((state) => state.addMessage);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [currentSession, setCurrentSession] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get current session when component mounts
+    setCurrentSession(wsService.getCurrentSession());
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,8 +39,29 @@ const ChatInterface: React.FC = () => {
     setInput('');
   };
 
+  const handleNewSession = () => {
+    // Clear messages in store
+    useChatStore.getState().clearMessages();
+    
+    // Start a new WebSocket session
+    const newSessionId = wsService.startNewSession();
+    setCurrentSession(newSessionId);
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-50">
+      <div className="bg-white p-2 border-b flex justify-between items-center">
+        <div className="text-sm text-gray-500">
+          {currentSession ? `Session: ${currentSession.substring(0, 8)}...` : 'No active session'}
+        </div>
+        <button
+          onClick={handleNewSession}
+          className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+        >
+          New Session
+        </button>
+      </div>
+      
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg) => (
           <div
@@ -56,6 +84,7 @@ const ChatInterface: React.FC = () => {
         ))}
         <div ref={messagesEndRef} />
       </div>
+      
       <form onSubmit={handleSubmit} className="p-4 bg-white border-t shadow-lg">
         <div className="flex space-x-2">
           <input
