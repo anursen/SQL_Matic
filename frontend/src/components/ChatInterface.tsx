@@ -3,12 +3,14 @@ import { useChatStore } from '../store';
 import { wsService } from '../services/websocket';
 import { getSessionHistory, renameSession } from '../utils/sessionManager';
 import MarkdownRenderer from './MarkdownRenderer';
+import ExportButton from './ExportButton';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const messages = useChatStore((state) => state.messages);
   const addMessage = useChatStore((state) => state.addMessage);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [currentSession, setCurrentSession] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,23 +58,34 @@ const ChatInterface: React.FC = () => {
         <div className="text-sm text-gray-500">
           {currentSession ? `Session: ${currentSession.substring(0, 8)}...` : 'No active session'}
         </div>
-        <button
-          onClick={handleNewSession}
-          className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
-        >
-          New Session
-        </button>
+        <div className="flex space-x-2">
+          <ExportButton 
+            messages={messages} 
+            chatContainerRef={chatContainerRef} 
+          />
+          <button
+            onClick={handleNewSession}
+            className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+          >
+            New Session
+          </button>
+        </div>
       </div>
       
       {/* Messages area with fixed constraints to prevent overflow */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100vh - 150px)' }}>
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-4" 
+        style={{ maxHeight: 'calc(100vh - 150px)' }}
+        ref={chatContainerRef}
+        id="chat-messages-container"
+      >
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[70%] p-3 rounded-2xl ${
+              className={`message-content ${msg.sender === 'user' ? 'message-user' : 'message-ai'} max-w-[70%] p-3 rounded-2xl ${
                 msg.sender === 'user'
                   ? 'bg-blue-600 text-white rounded-br-none'
                   : 'bg-white shadow-md rounded-bl-none'

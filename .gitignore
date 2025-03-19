@@ -25,3 +25,8 @@ logs/
 
 # Operating System
 .DS_Store
+
+# Azure deployment
+.deployment
+.publish/
+.azure/

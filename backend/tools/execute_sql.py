@@ -13,11 +13,12 @@ sys.path.append(str(project_root))
 from config import config
 
 @tool
-def execute_sql_query(query: str) -> dict:
+def execute_sql_query(query: str,max_results:int=None) -> dict:
     '''
     Execute SQL queries on SQLite database with result limits.
     Args:
-        query (str): The SQL query to execute
+        query(str): The SQL query to execute
+        max_results(int): Maximum number of results to return (default is 100) 
     Returns:
         dict: Contains:
             - message: Summary of results
@@ -30,9 +31,11 @@ def execute_sql_query(query: str) -> dict:
     try:
         print(f"[TOOL] execute_sql_query {query}")
         # Get configuration
+        
         tool_config = config.tool_execute_sql
         database_config = config.database_config
-        max_results = tool_config.get('max_results', 100)
+        if max_results is None:
+            max_results = tool_config.get('max_results', 100)
         return_format = tool_config.get('return_format', 'json')
         db_path = database_config.get('default_path', 'database.db')
             

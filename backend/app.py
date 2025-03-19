@@ -11,10 +11,18 @@ import uuid
 app = FastAPI()
 assistant = SQLQueryAssistant()
 
-# Add CORS middleware
+# Set up CORS for production
+allowed_origins = [
+    "http://localhost:5173",
+    "https://chat-app.azurewebsites.net"  # Update with your actual Azure frontend URL
+]
+
+if os.environ.get("ALLOWED_ORIGINS"):
+    allowed_origins.extend(os.environ.get("ALLOWED_ORIGINS").split(","))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

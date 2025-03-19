@@ -19,3 +19,4 @@ numpy
 pymongo
 mysql-connector-python
 psycopg2-binary
+gunicorn

@@ -15,12 +15,12 @@ def get_schema(max_tables: str) -> Dict:
     '''
     Get the schema of the database.
     Args:
-        partial (bool): If True, get a partial schema. Defaults to False.
+        max_tables (str): The maximum number of tables to retrieve.
+
     Returns:
         Dict: A dictionary containing the schema information or an error message.
     Example:
-        get_database_schema(partial=False)
-        get_database_schema(partial=True)
+        get_schema('5')
 
     '''
     print(f"[TOOL] get_schema {max_tables}")

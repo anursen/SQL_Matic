@@ -3,8 +3,17 @@ import { getSessionId, createNewSession } from '../utils/sessionManager';
 
 class WebSocketService {
   private socket: WebSocket | null = null;
-  private readonly SOCKET_URL = 'ws://localhost:8000/ws/chat';
   private sessionId: string | null = null;
+  
+  // Get the appropriate WebSocket URL based on the environment
+  private getWebSocketUrl(): string {
+    const isProd = process.env.NODE_ENV === 'production';
+    const baseUrl = isProd 
+      ? 'wss://chat-app-backend.azurewebsites.net' 
+      : 'ws://localhost:8000';
+    
+    return `${baseUrl}/ws/chat`;
+  }
 
   connect() {
     if (this.socket) {
@@ -18,7 +27,7 @@ class WebSocketService {
     }
     
     // Add session ID to WebSocket URL
-    const wsUrl = `${this.SOCKET_URL}?session_id=${this.sessionId}`;
+    const wsUrl = `${this.getWebSocketUrl()}?session_id=${this.sessionId}`;
     this.socket = new WebSocket(wsUrl);
 
     this.socket.onopen = () => {

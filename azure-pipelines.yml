@@ -1,0 +1,60 @@
+trigger:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: BuildAndDeploy
+    jobs:
+      - job: BuildFrontend
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'
+            displayName: 'Install Node.js'
+          
+          - script: |
+              cd frontend
+              npm install
+              npm run build
+            displayName: 'Build Frontend'
+          
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: 'frontend/dist'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)/frontend'
+            displayName: 'Copy Frontend Files'
+          
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)/frontend'
+              artifactName: 'frontend'
+            displayName: 'Publish Frontend Artifacts'
+
+      - job: BuildBackend
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.9'
+            displayName: 'Install Python'
+          
+          - script: |
+              cd backend
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Install Dependencies'
+          
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: 'backend'
+              contents: '**'
+              targetFolder: '$(Build.ArtifactStagingDirectory)/backend'
+            displayName: 'Copy Backend Files'
+          
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)/backend'
+              artifactName: 'backend'
+            displayName: 'Publish Backend Artifacts'

@@ -69,7 +69,7 @@ tool_get_data_dictionary:
 
 tool_execute_sql:
   return_format: 'json'  # Available formats: json, csv, list
-  max_results: 1  # Maximum number of results to return
+  max_results: 10  # Maximum number of results to return
 
 tool_get_schema:
   exclude_system_tables: true
@@ -91,6 +91,7 @@ assistant:
     Answer : ...... /n
     Used SQL: ......
     Send your messages with markdown code blocks.
+    Use /n to separate lines in your response.
     
 
   process:
