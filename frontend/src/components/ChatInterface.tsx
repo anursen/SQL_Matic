@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '../store';
 import { wsService } from '../services/websocket';
 import { getSessionHistory, renameSession } from '../utils/sessionManager';
+import MarkdownRenderer from './MarkdownRenderer';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -77,7 +78,14 @@ const ChatInterface: React.FC = () => {
                   : 'bg-white shadow-md rounded-bl-none'
               }`}
             >
-              <p className="text-sm">{msg.content}</p>
+              {msg.sender === 'user' ? (
+                <p className="text-sm">{msg.content}</p>
+              ) : (
+                <MarkdownRenderer 
+                  content={msg.content}
+                  className={msg.sender === 'user' ? 'text-white' : 'text-gray-800'}
+                />
+              )}
               <span className={`text-xs mt-1 block ${msg.sender === 'user' ? 'text-blue-100' : 'text-gray-400'}`}>
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </span>

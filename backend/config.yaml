@@ -90,6 +90,8 @@ assistant:
     Sample Response:
     Answer : ...... /n
     Used SQL: ......
+    Send your messages with markdown code blocks.
+    
 
   process:
     default_thread_id: 1
