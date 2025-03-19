@@ -1,4 +1,4 @@
-Copilot Explainer: AI-Powered Chat App
+
 🚀 Overview
 This is a React-based real-time chat application designed to integrate with an AI assistant backend via WebSockets. The app follows a three-panel layout:
 
