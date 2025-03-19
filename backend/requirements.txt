@@ -10,13 +10,8 @@ pyyaml
 jinja2
 aiofiles
 sqlalchemy
-psycopg[binary,pool]
-psycopg_pool
 langgraph-checkpoint-postgres
 scikit-learn
 pandas
 numpy
-pymongo
-mysql-connector-python
-psycopg2-binary
 gunicorn

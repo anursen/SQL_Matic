@@ -1,106 +1,146 @@
-## Backend Explainer: AI-Powered Chat App
+# SQL_Matic Backend
 
-### 🚀 Overview
+## 🚀 Overview
 
-This backend will power the **real-time chat application** by:
+This backend powers the SQL_Matic application by:
 
-- **Handling WebSocket communication** for real-time messaging.
-- **Interfacing with the AI model** (LLM) for generating responses.
-- **Tracking token usage, inference speed, and tool activity**.
-- **Storing and retrieving chat history from a database**.
+- **Processing natural language queries** into SQL statements
+- **Handling WebSocket communication** for real-time messaging
+- **Executing SQL queries** against a SQLite database
+- **Providing database schema information** for frontend visualization
+- **Tracking tool usage and metrics** during query processing
 
----
-
-### 📌 Tech Stack
+## 📌 Tech Stack
 
 - **Backend Framework:** FastAPI (Python)
-- **Real-time Communication:** WebSockets (`websockets` or `socket.io` with FastAPI integration)
-- **Database:** PostgreSQL or MongoDB (for chat history)
-- **AI Model Integration:** OpenAI API / LLaMA / Custom LLM
-- **Message Queue (Optional):** Redis / Celery for async tasks
+- **Real-time Communication:** WebSockets
+- **Database:** SQLite (Chinook sample database)
+- **AI Integration:** LangChain with OpenAI models
+- **Orchestration:** LangGraph for tool execution flow
+- **Configuration:** YAML-based with environment variable support
 
----
+## 🛠️ Key Components
 
-### 🔌 WebSocket API Implementation
+### SQL Tools
 
-The backend will maintain a persistent WebSocket connection to handle real-time messaging between users and the AI.
+- **execute_sql_query**: Executes SQL queries against the database with configurable result limits
+- **get_schema**: Retrieves database structure including tables, columns, and relationships
+- **get_db_field_definition**: Gets field definitions from the data dictionary
 
-#### WebSocket Flow:
+### AI Assistant
 
-1. **User connects to WebSocket** (`/ws/chat`) → Backend registers connection.
-2. **User sends a message** (`user_message` event) → Backend forwards message to LLM.
-3. **Backend processes AI response** → AI generates a reply.
-4. **Backend sends AI response** (`ai_response` event) to the frontend.
-5. **Backend sends system updates** (`backend_status` event) → Updates token usage, inference speed, etc.
+The `SQLQueryAssistant` class orchestrates:
+- LLM initialization with appropriate configuration
+- Tool binding for SQL operations
+- LangGraph setup for message processing flow
+- Session management for persistent conversations
 
-#### WebSocket Events:
+## 🔌 API Implementation
 
-| Event Name       | Direction  | Description           |
-| ---------------- | ---------- | --------------------- |
-| `user_message`   | → Backend  | Receives user message |
-| `ai_response`    | ← Frontend | AI-generated reply    |
-| `backend_status` | ← Frontend | Live system metrics   |
-| `chat_history`   | ← Frontend | Updated chat logs     |
+### WebSocket Endpoint
 
----
-
-### 📡 REST API Endpoints
-
-#### Chat Management
-
-- `GET /chats` → Fetch chat history.
-- `GET /chat/{id}` → Load specific chat session.
-- `POST /chat` → Create a new chat session.
-
-#### AI Processing
-
-- `POST /generate` → Process a user message through LLM (for non-WebSocket clients).
-- `GET /stats` → Retrieve system statistics (token usage, latency, etc.).
-
----
-
-### 📂 Backend Code Structure
-
-```
-backend/
-│── main.py          # FastAPI application entry point
-│── websocket.py     # WebSocket handlers
-│── routes/
-│   ├── chat.py      # Chat history endpoints
-│   ├── ai.py        # AI model endpoints
-│   ├── stats.py     # Backend system stats
-│── database.py      # Database connection & models
-│── ai_engine.py     # AI model processing logic
-│── config.py        # Configuration settings
-```
-
----
-
-### 🔥 WebSocket Server Code (FastAPI Example)
+The main communication channel with the frontend:
 
 ```python
-from fastapi import FastAPI, WebSocket
-from typing import Dict
-
-app = FastAPI()
-active_connections: Dict[str, WebSocket] = {}
-
 @app.websocket("/ws/chat")
-async def chat_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    client_id = str(websocket.client)
-    active_connections[client_id] = websocket
+    
+    # Extract or generate session_id
+    query_params = dict(websocket.query_params)
+    session_id = query_params.get('session_id') or str(uuid.uuid4())
     
     try:
         while True:
+            # Receive user message
             data = await websocket.receive_json()
-            user_message = data.get("message")
-            ai_response = generate_ai_response(user_message)  # Call LLM
+            message = data.get('message', '')
             
-            await websocket.send_json({"event": "ai_response", "message": ai_response})
-            await websocket.send_json({"event": "backend_status", "tokens_used": 10, "latency": "150ms"})
-    except Exception:
-        active_connections.pop(client_id, None)
+            # Process with AI assistant
+            response = await assistant.process_query(message, session_id)
+            
+            # Send response back to client
+            await websocket.send_json({
+                "type": "ai_response",
+                "content": response,
+                "sessionId": session_id
+            })
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        await websocket.close()
 ```
 
----
+### REST Endpoints
+
+- `GET /schema` → Retrieve database structure for visualization
+- `GET /config` → Get the current application configuration
+- `POST /config` → Update application configuration
+
+## 📦 Project Structure
+
+```
+backend/
+│── agents/                  # AI assistant implementation
+│   ├── sql_matic.py         # Main assistant class
+│   └── __init__.py
+│── tools/                   # SQL operation tools
+│   ├── execute_sql.py       # SQL query execution tool
+│   ├── get_schema.py        # Database schema extraction tool
+│   ├── query_data_dictionary.py # Data dictionary lookup tool
+│   ├── schema_getters.py    # Schema extraction utilities
+│   └── __init__.py
+│── app.py                   # FastAPI application entry point
+│── config.py                # Configuration management
+│── config.yaml              # Application configuration
+│── chinook_db_creator.py    # Sample database setup
+│── evaluation_service.py    # SQL query accuracy evaluation
+│── main.py                  # CLI interface for testing
+└── requirements.txt         # Python dependencies
+```
+
+## 🔍 Configuration
+
+The application uses a layered configuration approach:
+
+1. **Default settings** in `config.yaml`
+2. **Environment variables** for sensitive information
+3. **Runtime configuration** via the `/config` endpoint
+
+## 📊 Evaluation
+
+The `SQLEvaluationService` class provides:
+- Evaluation of SQL generation quality against ground truth examples
+- Cosine similarity measurement between generated and expected SQL
+- Detailed reporting of successes and failures
+
+## 🚀 Getting Started
+
+1. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Create a `.env` file with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ENVIRONMENT=development
+   ```
+
+4. Set up the sample database:
+   ```bash
+   python chinook_db_creator.py
+   ```
+
+5. Start the server:
+   ```bash
+   python app.py
+   ```
+
+The server will be available at `http://localhost:8000` with WebSocket endpoint at `ws://localhost:8000/ws/chat`.

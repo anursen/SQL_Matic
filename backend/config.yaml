@@ -47,19 +47,10 @@ api:
   swagger_ui: true
 
 evaluation:
-  ground_truth_path: "Complete_Ground_Truth_SQL_Table.csv"
+  ground_truth_path: "/backend/Ground_Truth_For_Evaluation.csv"
   similarity_threshold: 0.8
   batch_size: 100
 
-templates:
-  sql_query: |
-    Given the following SQL database schema:
-    {db_schema}
-    
-    Write a SQL query to answer the following question:
-    Question: {question}
-    
-    SQL Query:
 
 tool_get_data_dictionary:
   file_path: "Database_Data_Dictionary_with_Descriptions.csv"
