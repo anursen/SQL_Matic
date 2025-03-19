@@ -2,15 +2,20 @@ import React from 'react';
 
 const ChatHistoryPanel: React.FC = () => {
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Chat History</h2>
-      <div className="space-y-2">
-        {/* Placeholder for chat history */}
-        <div className="p-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200">
-          Previous Chat 1
+    <div className="h-full bg-gray-50 p-6">
+      <h2 className="text-xl font-semibold text-gray-800 mb-6">Chat History</h2>
+      <div className="space-y-3">
+        <div className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+          <h3 className="font-medium text-gray-800 mb-1">Database Query Chat</h3>
+          <p className="text-sm text-gray-500">Last message: 2 hours ago</p>
         </div>
-        <div className="p-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200">
-          Previous Chat 2
+        <div className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+          <h3 className="font-medium text-gray-800 mb-1">Schema Analysis</h3>
+          <p className="text-sm text-gray-500">Last message: 5 hours ago</p>
+        </div>
+        <div className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+          <h3 className="font-medium text-gray-800 mb-1">Data Exploration</h3>
+          <p className="text-sm text-gray-500">Last message: 1 day ago</p>
         </div>
       </div>
     </div>

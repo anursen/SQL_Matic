@@ -5,14 +5,14 @@ import BackendUpdatesPanel from './components/BackendUpdatesPanel';
 
 function App() {
   return (
-    <div className="grid grid-cols-12 h-screen">
-      <div className="col-span-3 border-r p-4 overflow-y-auto">
+    <div className="grid grid-cols-12 h-screen bg-gray-100">
+      <div className="col-span-3 border-r border-gray-200">
         <ChatHistoryPanel />
       </div>
-      <div className="col-span-6 flex flex-col">
+      <div className="col-span-6">
         <ChatInterface />
       </div>
-      <div className="col-span-3 border-l p-4">
+      <div className="col-span-3 border-l border-gray-200">
         <BackendUpdatesPanel />
       </div>
     </div>
