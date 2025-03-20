@@ -4,6 +4,7 @@ import ChatInterface from './components/ChatInterface';
 import BackendUpdatesPanel from './components/BackendUpdatesPanel';
 import ConfigEditorPage from './components/ConfigEditorPage';
 import EvaluationPage from './components/EvaluationPage';
+import LogsViewer from './components/LogsViewer';
 
 function App() {
   const [currentView, setCurrentView] = useState('chat');
@@ -43,6 +44,16 @@ function App() {
             >
               SQL Evaluation
             </button>
+            <button 
+              onClick={() => setCurrentView('logs')}
+              className={`px-4 py-2 rounded-lg text-left ${
+                currentView === 'logs' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              Application Logs
+            </button>
           </nav>
         </div>
         <ChatHistoryPanel />
@@ -52,6 +63,7 @@ function App() {
         {currentView === 'chat' && <ChatInterface />}
         {currentView === 'config' && <ConfigEditorPage />}
         {currentView === 'evaluation' && <EvaluationPage />}
+        {currentView === 'logs' && <LogsViewer maxHeight="calc(100vh - 120px)" />}
       </div>
       
       <div className="col-span-3 border-l border-gray-200 overflow-y-auto">
