@@ -9,6 +9,8 @@ import yaml
 import uuid
 from evaluation_service import SQLEvaluationService
 from typing import Optional
+from logger import logger
+from chinook_db_creator import setup_chinook_db
 
 app = FastAPI()
 regular_assistant = SQLQueryAssistant('regular')
@@ -37,9 +39,20 @@ async def get_database_schema():
     # Extract the actual schema data from the tool response
     if isinstance(schema_result, dict) and "schema" in schema_result and "tables" in schema_result["schema"]:
         tables = schema_result["schema"]["tables"]
+        if not tables:
+            logger.warning("Database schema returned empty tables array - attempting to recreate database")
+            if setup_chinook_db():
+                logger.info("Successfully recreated the Chinook database")
+                # Try to get schema again after database recreation
+                schema_result = get_schema("get_all")
+                if isinstance(schema_result, dict) and "schema" in schema_result and "tables" in schema_result["schema"]:
+                    tables = schema_result["schema"]["tables"]
+                    logger.info("Successfully retrieved schema after database recreation")
+            else:
+                logger.error("Failed to recreate the Chinook database")
         return {"tables": tables}
     else:
-        print("Schema format unexpected:", schema_result)  # Debug print
+        logger.warning("Schema format unexpected: %s", schema_result)  # Using logger instead of print
         # Return an empty array as fallback
         return {"tables": []}
 
@@ -52,6 +65,7 @@ async def get_config():
             content = file.read()
         return {"content": content}
     except Exception as e:
+        logger.error("Failed to read config file: %s", str(e))
         raise HTTPException(status_code=500, detail=f"Failed to read config file: {str(e)}")
 
 @app.post("/config")
@@ -81,27 +95,29 @@ async def update_config(data: dict = Body(...)):
         with open(config_path, 'w') as file:
             file.write(content)
             
+        logger.info("Configuration updated successfully")
         return {"message": "Configuration updated successfully"}
     except HTTPException:
         raise
     except Exception as e:
+        logger.error("Failed to update config file: %s", str(e))
         raise HTTPException(status_code=500, detail=f"Failed to update config file: {str(e)}")
 
 @app.get("/evaluate")
 async def evaluate_assistant_endpoint(num_queries: Optional[int] = None):
     """Run evaluation of SQL assistant against ground truth data"""
     try:
-        print(f"Starting evaluation with num_queries={num_queries}")
+        logger.info("Starting evaluation with num_queries=%s", num_queries)
         eval_service = SQLEvaluationService()
         results = await eval_service.evaluate_assistant(evaluator_assistant, num_queries)
-        print(f"Evaluation completed. Results: {results.keys()}")
+        logger.info("Evaluation completed. Results: %s", list(results.keys()))
         if "error" in results:
-            print(f"Evaluation error: {results['error']}")
+            logger.error("Evaluation error: %s", results['error'])
         return results
     except Exception as e:
         import traceback
-        print(f"Evaluation endpoint error: {str(e)}")
-        print(traceback.format_exc())
+        logger.error("Evaluation endpoint error: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
 @app.websocket("/ws/chat")
@@ -115,9 +131,9 @@ async def websocket_endpoint(websocket: WebSocket):
     if not session_id:
         # Generate a new session ID if none was provided
         session_id = str(uuid.uuid4())
-        print(f"No session ID provided, generated new ID: {session_id}")
+        logger.info("No session ID provided, generated new ID: %s", session_id)
     else:
-        print(f"Using provided session ID: {session_id}")
+        logger.info("Using provided session ID: %s", session_id)
         
     try:
         while True:
@@ -130,9 +146,9 @@ async def websocket_endpoint(websocket: WebSocket):
             if client_session_id and client_session_id != session_id:
                 # Update to use the most recent session ID from client
                 session_id = client_session_id
-                print(f"Updated session ID from message: {session_id}")
+                logger.info("Updated session ID from message: %s", session_id)
             
-            print(f"Processing message for session {session_id}: {message}")
+            logger.info("Processing message for session %s: %s", session_id, message)
             
             # Process message with the session ID as thread_id
             response = await regular_assistant.process_query(message, session_id)
@@ -145,11 +161,12 @@ async def websocket_endpoint(websocket: WebSocket):
             })
             
     except Exception as e:
-        print(f"Error in session {session_id}: {e}")
+        logger.error("Error in session %s: %s", session_id, e)
     finally:
-        print(f"WebSocket connection closed for session ID: {session_id}")
+        logger.info("WebSocket connection closed for session ID: %s", session_id)
         await websocket.close()
 
 if __name__ == "__main__":
     import uvicorn
+    logger.info("Starting SQL_Matic backend server")
     uvicorn.run(app, host="0.0.0.0", port=8000)
