@@ -1,9 +1,12 @@
 import { useChatStore } from '../store';
 import { getSessionId, createNewSession } from '../utils/sessionManager';
+import { logger } from '../utils/logger';
 
 class WebSocketService {
   private socket: WebSocket | null = null;
   private sessionId: string | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
   
   // Get the appropriate WebSocket URL based on the environment
   private getWebSocketUrl(): string {
@@ -14,87 +17,116 @@ class WebSocketService {
     
     return `${baseUrl}/ws/chat`;
   }
-
+  
   connect() {
     if (this.socket) {
+      logger.info('WebSocket already connected');
       return;
     }
-
-    // Get existing session ID or create a new one
+    
+    // Get or create a session ID
     this.sessionId = getSessionId();
     if (!this.sessionId) {
       this.sessionId = createNewSession();
+      logger.info('Created new session: %s', this.sessionId);
+    } else {
+      logger.info('Using existing session: %s', this.sessionId);
     }
     
-    // Add session ID to WebSocket URL
     const wsUrl = `${this.getWebSocketUrl()}?session_id=${this.sessionId}`;
-    this.socket = new WebSocket(wsUrl);
-
-    this.socket.onopen = () => {
-      console.log(`Connected to WebSocket server with session: ${this.sessionId}`);
-    };
-
-    this.socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'ai_response') {
-          useChatStore.getState().addMessage({
-            id: Date.now().toString(),
-            content: data.content,
-            sender: 'ai',
-            timestamp: Date.now(),
-          });
+    logger.info('Connecting to WebSocket: %s', wsUrl);
+    
+    try {
+      this.socket = new WebSocket(wsUrl);
+      
+      this.socket.onopen = () => {
+        logger.info('WebSocket connection established');
+        this.reconnectAttempts = 0;
+      };
+      
+      this.socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          logger.debug('WebSocket message received: %j', data);
+          
+          if (data.type === 'ai_response') {
+            useChatStore.getState().addMessage({
+              id: Date.now().toString(),
+              content: data.content,
+              sender: 'ai',
+              timestamp: Date.now(),
+            });
+          }
+          
+          if (data.type === 'backend_status') {
+            useChatStore.getState().updateBackendStatus(data.metrics);
+          }
+        } catch (error) {
+          logger.error('Error parsing WebSocket message: %s', error);
         }
-      } catch (error) {
-        console.error('Error parsing message:', error);
-      }
-    };
-
-    this.socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    this.socket.onclose = () => {
-      console.log('WebSocket connection closed');
-      this.socket = null;
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => this.connect(), 5000);
-    };
+      };
+      
+      this.socket.onerror = (error) => {
+        logger.error('WebSocket error: %j', error);
+      };
+      
+      this.socket.onclose = () => {
+        logger.warn('WebSocket connection closed');
+        this.socket = null;
+        
+        // Attempt to reconnect if we haven't exceeded max attempts
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts++;
+          const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+          logger.info('Attempting to reconnect in %d ms (attempt %d/%d)', 
+                     delay, this.reconnectAttempts, this.maxReconnectAttempts);
+          setTimeout(() => this.connect(), delay);
+        } else {
+          logger.error('Max reconnection attempts reached. Please refresh the page.');
+        }
+      };
+    } catch (error) {
+      logger.error('Failed to create WebSocket connection: %s', error);
+    }
   }
-
-  sendMessage(message: string) {
+  
+  getCurrentSession(): string | null {
+    return this.sessionId;
+  }
+  
+  startNewSession(): string {
+    // Close existing connection if any
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+    }
+    
+    // Create a new session
+    this.sessionId = createNewSession();
+    logger.info('Started new session: %s', this.sessionId);
+    
+    // Connect with the new session
+    this.connect();
+    
+    return this.sessionId;
+  }
+  
+  sendMessage(message: string): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      console.error('WebSocket is not connected');
+      logger.warn('WebSocket not connected, attempting to reconnect...');
+      this.connect();
+      setTimeout(() => this.sendMessage(message), 1000);
       return;
     }
-    // Include session ID with each message
-    this.socket.send(JSON.stringify({ 
-      message,
-      sessionId: this.sessionId 
-    }));
-  }
-
-  // Create a method to start a new session
-  startNewSession() {
-    this.sessionId = createNewSession();
-    // Reconnect with new session
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-    }
-    this.connect();
-    return this.sessionId;
-  }
-
-  // Get current session ID
-  getCurrentSession() {
-    return this.sessionId;
-  }
-
-  disconnect() {
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
+    
+    try {
+      logger.debug('Sending message via WebSocket: %s', message);
+      this.socket.send(JSON.stringify({
+        message,
+        sessionId: this.sessionId
+      }));
+    } catch (error) {
+      logger.error('Error sending message: %s', error);
     }
   }
 }
