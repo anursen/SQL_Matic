@@ -7,10 +7,12 @@ import os
 from pathlib import Path
 import yaml
 import uuid
+from evaluation_service import SQLEvaluationService
+from typing import Optional
 
 app = FastAPI()
-assistant = SQLQueryAssistant()
-
+regular_assistant = SQLQueryAssistant('regular')
+evaluator_assistant = SQLQueryAssistant('evaluator')
 # Set up CORS for production
 allowed_origins = [
     "http://localhost:5173",
@@ -85,6 +87,23 @@ async def update_config(data: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update config file: {str(e)}")
 
+@app.get("/evaluate")
+async def evaluate_assistant_endpoint(num_queries: Optional[int] = None):
+    """Run evaluation of SQL assistant against ground truth data"""
+    try:
+        print(f"Starting evaluation with num_queries={num_queries}")
+        eval_service = SQLEvaluationService()
+        results = await eval_service.evaluate_assistant(evaluator_assistant, num_queries)
+        print(f"Evaluation completed. Results: {results.keys()}")
+        if "error" in results:
+            print(f"Evaluation error: {results['error']}")
+        return results
+    except Exception as e:
+        import traceback
+        print(f"Evaluation endpoint error: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+
 @app.websocket("/ws/chat")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -116,7 +135,7 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"Processing message for session {session_id}: {message}")
             
             # Process message with the session ID as thread_id
-            response = await assistant.process_query(message, session_id)
+            response = await regular_assistant.process_query(message, session_id)
             
             # Send response back to client
             await websocket.send_json({

@@ -15,12 +15,12 @@ def get_schema(max_tables: str) -> Dict:
     '''
     Get the schema of the database.
     Args:
-        max_tables (str): The maximum number of tables to retrieve.
+        max_tables (str): put 'get_all' string to get all tables.
 
     Returns:
         Dict: A dictionary containing the schema information or an error message.
     Example:
-        get_schema('5')
+        get_schema('get_all')
 
     '''
     print(f"[TOOL] get_schema {max_tables}")

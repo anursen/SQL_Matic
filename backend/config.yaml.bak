@@ -13,7 +13,8 @@ llm:
 
 database:
   type: "sqlite"  # or "mongodb", "mysql", "postgresql"
-  default_path: chinook.db
+  default_path: sakila.db
+  #default_path: chinook.db
   # For MongoDB
   connection_string: "mongodb://localhost:27017/"
   database_name: "your_database"
@@ -47,19 +48,9 @@ api:
   swagger_ui: true
 
 evaluation:
-  ground_truth_path: "Complete_Ground_Truth_SQL_Table.csv"
+  ground_truth_path: "chinookdb_groundtruth.csv"
   similarity_threshold: 0.8
   batch_size: 100
-
-templates:
-  sql_query: |
-    Given the following SQL database schema:
-    {db_schema}
-    
-    Write a SQL query to answer the following question:
-    Question: {question}
-    
-    SQL Query:
 
 tool_get_data_dictionary:
   file_path: "Database_Data_Dictionary_with_Descriptions.csv"
@@ -69,7 +60,7 @@ tool_get_data_dictionary:
 
 tool_execute_sql:
   return_format: 'json'  # Available formats: json, csv, list
-  max_results: 1  # Maximum number of results to return
+  max_results: 10  # Maximum number of results to return
 
 tool_get_schema:
   exclude_system_tables: true
@@ -86,5 +77,13 @@ assistant:
     3. get_data_dictionary: Get data dictionary.
     Check the produced sql query for correctness. And fix if not working.
     Always provide accurate and concise information.
+    Always provide the sql statement that you used to get the data with the result.
+    Sample Response:
+    Answer : ...... /n
+    Used SQL: ......
+    Send your messages with markdown code blocks.
+    Use /n to separate lines in your response.
+    
+
   process:
     default_thread_id: 1

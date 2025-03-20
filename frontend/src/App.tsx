@@ -3,6 +3,7 @@ import ChatHistoryPanel from './components/ChatHistoryPanel';
 import ChatInterface from './components/ChatInterface';
 import BackendUpdatesPanel from './components/BackendUpdatesPanel';
 import ConfigEditorPage from './components/ConfigEditorPage';
+import EvaluationPage from './components/EvaluationPage';
 
 function App() {
   const [currentView, setCurrentView] = useState('chat');
@@ -32,13 +33,25 @@ function App() {
             >
               Config Editor
             </button>
+            <button 
+              onClick={() => setCurrentView('evaluation')}
+              className={`px-4 py-2 rounded-lg text-left ${
+                currentView === 'evaluation' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              SQL Evaluation
+            </button>
           </nav>
         </div>
         <ChatHistoryPanel />
       </div>
       
       <div className="col-span-6 flex flex-col overflow-hidden">
-        {currentView === 'chat' ? <ChatInterface /> : <ConfigEditorPage />}
+        {currentView === 'chat' && <ChatInterface />}
+        {currentView === 'config' && <ConfigEditorPage />}
+        {currentView === 'evaluation' && <EvaluationPage />}
       </div>
       
       <div className="col-span-3 border-l border-gray-200 overflow-y-auto">

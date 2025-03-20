@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 
 async def main():
-    assistant = SQLQueryAssistant()
+    assistant = SQLQueryAssistant(purpose='regular')
     while True:
         user_input = input("You: ")
         if user_input.lower() in ['exit', 'quit']:

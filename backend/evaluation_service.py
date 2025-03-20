@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import time
+import os
 from typing import Dict, Any, Optional
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -10,14 +11,28 @@ from config import config
 
 class SQLEvaluationService:
     def __init__(self):
-        self.ground_truth_path = Path(__file__).parent.parent / config.evaluation_config['ground_truth_path']
+        # Try different potential locations for the ground truth file
+        path_from_config = config.evaluation_config['ground_truth_path']
+        
+        # Try absolute path from config
+        self.ground_truth_path = Path(path_from_config)
+        
+        # If not found, try relative to current file
+        if not self.ground_truth_path.exists():
+            self.ground_truth_path = Path(__file__).parent / path_from_config
+        
+        # If still not found, try removing "/backend/" prefix if it exists
+        if not self.ground_truth_path.exists() and path_from_config.startswith('/backend/'):
+            self.ground_truth_path = Path(__file__).parent / path_from_config[9:]
+        
+        print(f"Looking for ground truth file at: {self.ground_truth_path}")
         self.vectorizer = TfidfVectorizer(lowercase=True, strip_accents='unicode')
     
     def extract_sql_from_response(self, response: str) -> str:
         """Extract SQL query from assistant's response"""
         response_lower = response.lower()
         assistant_sql = ""
-        
+        #TODO We should add an output parser or system prompt to ensure the response is pure sql
         # Check for SQL keywords
         sql_markers = ["select", "insert", "update", "delete", "with"]
         for line in response_lower.split('\n'):
@@ -49,17 +64,75 @@ class SQLEvaluationService:
             Dict[str, Any]: Evaluation metrics and results
         """
         try:
-            df = pd.read_csv(self.ground_truth_path)
+            if not self.ground_truth_path.exists():
+                return {
+                    "error": f"Ground truth file not found at: {self.ground_truth_path}",
+                    "total_queries": 0,
+                    "successful_queries": 0,
+                    "failed_queries": 0,
+                    "similarities": [],
+                    "failed_cases": []
+                }
+                
+            print(f"Loading ground truth data from: {self.ground_truth_path}")
+            
+            # Try to read the CSV with different parsing options to handle the formatting issue
+            try:
+                # Try with custom delimiter to handle comma-separated values within fields
+                df = pd.read_csv(self.ground_truth_path, sep='|')
+            except Exception:
+                try:
+                    # Try reading the file directly and parsing it manually
+                    with open(self.ground_truth_path, 'r') as file:
+                        lines = file.readlines()
+                    
+                    # Parse header and data manually
+                    header = ["User Input", "Ground Truth SQL"]
+                    data = []
+                    
+                    for line in lines[1:]:  # Skip header row
+                        # Split at the last comma which divides user input from SQL
+                        parts = line.split(',')
+                        if len(parts) >= 2:
+                            user_input = ','.join(parts[:-1]).strip()
+                            sql = parts[-1].strip()
+                            # Remove quotes if present
+                            if sql.startswith('"') and sql.endswith('"'):
+                                sql = sql[1:-1]
+                            data.append([user_input, sql])
+                    
+                    df = pd.DataFrame(data, columns=header)
+                except Exception as e:
+                    print(f"Manual parsing failed: {str(e)}")
+                    # If all attempts fail, try with the 'error_bad_lines' parameter
+                    df = pd.read_csv(self.ground_truth_path, error_bad_lines=False)
+            
+            # Print out what we loaded to debug
+            print(f"Loaded {len(df)} rows from CSV. Columns: {df.columns.tolist()}")
+            print(f"First row: {df.iloc[0].tolist()}")
+            
             if num_queries:
                 df = df.head(num_queries)
         except Exception as e:
-            return {"error": f"Failed to load ground truth data: {str(e)}"}
+            print(f"Error loading ground truth data: {str(e)}")
+            return {
+                "error": f"Failed to load ground truth data: {str(e)}",
+                "total_queries": 0,
+                "successful_queries": 0,
+                "failed_queries": 0,
+                "similarities": [],
+                "failed_cases": []
+            }
 
         results = {
             "total_queries": len(df),
             "successful_queries": 0,
             "failed_queries": 0,
             "average_similarity": 0.0,
+            "median_similarity": 0.0,
+            "min_similarity": 0.0,
+            "max_similarity": 0.0,
+            "success_rate": 0.0,
             "similarities": [],
             "failed_cases": [],
             "execution_time": 0.0

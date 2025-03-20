@@ -16,6 +16,7 @@ from tools.get_schema import get_schema
 from tools.execute_sql import execute_sql_query
 from tools.query_data_dictionary import get_db_field_definition
 from langgraph.checkpoint.memory import MemorySaver
+from typing import Literal
 
 class SQLQueryAssistant:
     '''We need to redefine graph again.
@@ -26,11 +27,11 @@ class SQLQueryAssistant:
     use or output the response.
     '''
     
-    def __init__(self, db_path=None):
-        self.db_path = db_path or config.database_config['default_path']
+    def __init__(self,purpose : Literal['regular','evaluator']):
+        self.db_path = config.database_config['default_path']
         self.memory = MemorySaver()
-        
-
+        self.purpose = purpose
+    
         
         self.llm = init_chat_model(
             config.llm_config['model'],
@@ -46,9 +47,12 @@ class SQLQueryAssistant:
 
     def setup_graph(self):
         # Define the system message and tools
-        sys_msg = SystemMessage(
-            content=config.assistant_config['system_message']
-        )        
+        if self.purpose == 'regular':
+            system_message = config.assistant_config['regular_system_message']
+        else:
+            system_message = config.assistant_config['evaluator_system_message']
+        sys_msg = SystemMessage(content=system_message)        
+        
         async def assistant(state: MessagesState):
             return {"messages": [await self.llm_with_tools.ainvoke([sys_msg] + state["messages"])]}
 
