@@ -13,8 +13,9 @@ llm:
 
 database:
   type: "sqlite"  # or "mongodb", "mysql", "postgresql"
-  default_path: sakila.db
-  #default_path: chinook.db
+  #default_path: sakila.db
+  default_path: chinook.db
+  default_path: sample.db
   # For MongoDB
   connection_string: "mongodb://localhost:27017/"
   database_name: "your_database"
@@ -69,7 +70,7 @@ tool_get_schema:
   cache_timeout: 300  # Schema cache timeout in seconds
 
 assistant:
-  system_message: |
+  regular_system_message: |
     You are a SQL assistant that helps users query databases.
     You can use the following tools:
     1. get_schema: Get database structure
@@ -83,6 +84,18 @@ assistant:
     Used SQL: ......
     Send your messages with markdown code blocks.
     Use /n to separate lines in your response.
+  evaluator_system_message: |
+    You are a SQL evaluator that helps users evaluate the correctness of SQL queries.
+    You can use the following tools:
+    1. get_schema: Get database structure
+    2. execute_sql_query: Run SQL queries
+    3. get_data_dictionary: Get data dictionary.
+    Check the produced sql query for correctness. And fix if not working.
+    Always provide accurate and concise information.
+    Only provide the sql statement that you used to get the data with the result.
+    Again only provide the sql statement that you used to get the data with the result.
+    Sample Response:
+    'Select * from ......'
     
 
   process:

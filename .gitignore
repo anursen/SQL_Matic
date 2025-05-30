@@ -30,3 +30,5 @@ logs/
 .deployment
 .publish/
 .azure/
+
+files/

@@ -14,7 +14,8 @@ llm:
 database:
   type: "sqlite"  # or "mongodb", "mysql", "postgresql"
   #default_path: sakila.db
-  default_path: chinook.db
+  #default_path: chinook.db
+  default_path: sample.db
   # For MongoDB
   connection_string: "mongodb://localhost:27017/"
   database_name: "your_database"
