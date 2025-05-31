@@ -19,21 +19,36 @@ const ChatHistoryPanel: React.FC = () => {
     }
   };
 
+  const handlePopulateDatabase = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/populate-db", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to populate database");
+      }
+
+      const data = await response.json();
+      alert(data.message);
+    } catch (error) {
+      console.error("Error populating database:", error);
+      alert(
+        "Failed to populate database. Please check the console for details."
+      );
+    }
+  };
+
   return (
     <div
       className="h-full bg-gray-50 p-6 overflow-y-auto"
       style={{ maxHeight: "calc(100vh - 120px)" }}
     >
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800">
           Chat History(V2)
         </h2>
-        <button
-          onClick={handleUpdateDatabase}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Update DB
-        </button>
+        <div className="space-x-2"></div>
       </div>
       <div className="space-y-3">
         <div className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100">

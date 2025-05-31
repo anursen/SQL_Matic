@@ -14,8 +14,9 @@ llm:
 database:
   type: "sqlite"  # or "mongodb", "mysql", "postgresql"
   #default_path: sakila.db
-  default_path: chinook.db
+  #default_path: chinook.db
   default_path: sample.db
+  sample_records: 3000 # Number of sample records to generate per table
   # For MongoDB
   connection_string: "mongodb://localhost:27017/"
   database_name: "your_database"
@@ -55,6 +56,7 @@ evaluation:
 
 tool_get_data_dictionary:
   file_path: "Database_Data_Dictionary_with_Descriptions.csv"
+  data_dictionary_path: "files/simplified_data_dictionary_with_keys.csv"
   filter_column: 'Column Name'
   return_columns: ['Column Name','Table Name','Data Type','Description']
   max_results: 5  # Maximum number of results to return

@@ -35,7 +35,7 @@ app.add_middleware(
 
 @app.get("/schema")
 async def get_database_schema():
-    schema_result = get_schema("get_all")
+    schema_result = get_schema("all")
 
     # Extract the actual schema data from the tool response
     if (
@@ -51,7 +51,7 @@ async def get_database_schema():
             if setup_chinook_db():
                 logger.info("Successfully recreated the Chinook database")
                 # Try to get schema again after database recreation
-                schema_result = get_schema("get_all")
+                schema_result = get_schema("all")
                 if (
                     isinstance(schema_result, dict)
                     and "schema" in schema_result
@@ -204,6 +204,29 @@ async def update_database():
         logger.error("Failed to update database: %s", str(e))
         raise HTTPException(
             status_code=500, detail=f"Failed to update database: {str(e)}"
+        )
+
+
+@app.post("/populate-db")
+async def populate_database_endpoint():
+    try:
+        from files.populate_db import populate_database
+        from config import config
+        from pathlib import Path
+
+        db_name = config.database_config.get("default_path", "sample.db")
+        db_path = Path(__file__).parent / db_name
+        num_records = config.database_config.get("sample_records", 3000)
+
+        populate_database(str(db_path), num_records=num_records)
+        return {
+            "status": "success",
+            "message": f"Database populated successfully with {num_records} records per table",
+        }
+    except Exception as e:
+        logger.error("Failed to populate database: %s", str(e))
+        raise HTTPException(
+            status_code=500, detail=f"Failed to populate database: {str(e)}"
         )
 
 
